@@ -30,7 +30,7 @@ function normalizeArrayItems(items) {
     }
 }
 
-export default function convert(xmlStream, schema, {strict = false} = {}) {
+export default function convert(xmlStream, schema, {strict = false, trimText = true} = {}) {
     const saxStream = sax.createStream(true, {xmlns: false});
     const jsonStream = new stream.Readable();
 
@@ -137,6 +137,9 @@ export default function convert(xmlStream, schema, {strict = false} = {}) {
                 break;
             default:
                 throw new Error('Unknown type (in schema): ' + context.schema.type);
+        }
+        if (trimText) {
+            result = result.trim();
         }
         if (result.length >= 1) {
             context.hasText = true;
