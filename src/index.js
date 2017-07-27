@@ -118,6 +118,9 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
     saxStream.on('text', (text) => {
         const context = contextStack[contextStack.length - 1];
         let result;
+        if (trimText) {
+            text = text.trim();
+        }
         switch (context.schema.type) {
             case 'string':
                 result = JSON.stringify(text);
@@ -132,14 +135,11 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 if (strict) {
                     throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
                 } else {
-                    result = JSON.stringify(text);
+                    result = text.length >= 1 ? JSON.stringify(text) : '';
                 }
                 break;
             default:
                 throw new Error('Unknown type (in schema): ' + context.schema.type);
-        }
-        if (trimText) {
-            result = result.trim();
         }
         if (result.length >= 1) {
             context.hasText = true;
