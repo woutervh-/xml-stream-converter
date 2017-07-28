@@ -133,7 +133,11 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
             case 'object':
             case 'array':
                 if (strict) {
-                    throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
+                    if (text.length >= 1) {
+                        throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
+                    } else {
+                        result = '';
+                    }
                 } else {
                     result = text.length >= 1 ? JSON.stringify(text) : '';
                 }
