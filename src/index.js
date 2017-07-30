@@ -56,7 +56,8 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     contextStack.push(context);
                 }
                 break;
-            case 'object': {
+            case 'object':
+            {
                 const name = qnameLocal(node.name);
                 const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : {type: 'array'});
                 if (context.root) {
@@ -79,7 +80,8 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false});
                 break;
             }
-            case 'array': {
+            case 'array':
+            {
                 const name = qnameLocal(node.name);
                 const items = normalizeArrayItems(context.schema.items);
                 const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : {type: 'array'});
@@ -106,7 +108,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 break;
             }
             default:
-                throw new Error('Unknown type in schema: ' + context.schema.type);
+                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
         if (result.length >= 1) {
             if (!jsonStream.push(result)) {
@@ -143,7 +145,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 }
                 break;
             default:
-                throw new Error('Unknown type (in schema): ' + context.schema.type);
+                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
         if (result.length >= 1) {
             context.hasText = true;
