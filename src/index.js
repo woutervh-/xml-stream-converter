@@ -39,7 +39,8 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
         root: true,
         schema: rootSchema,
         firstItem: true,
-        hasText: false
+        hasText: false,
+        attributes: []
     }];
 
     saxStream.on('opentag', (node) => {
@@ -77,7 +78,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false});
+                contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: []});
                 break;
             }
             case 'array':
@@ -114,6 +115,34 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
             if (!jsonStream.push(result)) {
                 xmlStream.pause();
             }
+        }
+    });
+
+    saxStream.on('attribute', ({name, value}) => {
+        const context = contextStack[contextStack.length - 1];
+        switch (context.schema.type) {
+            case 'string':
+            case 'integer':
+            case 'number':
+            case 'boolean':
+                if (strict) {
+                    throw new Error('Did not expect attribute "' + name + '" for schema type ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
+                }
+                break;
+            case 'object':
+            case 'array':
+                if (context.schema.attributes) {
+                    if (context.schema.attributes[name]) {
+                        context.attributes.push({name, value});
+                    } else if (strict) {
+                        throw new Error('Element has attribute "' + name + '" but schema is missing this attribute in ' + JSON.stringify(context.schema));
+                    }
+                } else if (strict) {
+                    throw new Error('Element has attribute "' + name + '" but schema has no attributes in ' + JSON.stringify(context.schema));
+                }
+                break;
+            default:
+                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
     });
 
@@ -170,10 +199,20 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 }
                 break;
             case 'object':
-                result = '}';
+                if (context.attributes.length >= 1) {
+                    result = context.firstItem ? '' : ',';
+                    result += '"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '}}'
+                } else {
+                    result = '}';
+                }
                 break;
             case 'array':
-                result = ']';
+                if (context.attributes.length >= 1) {
+                    result = context.firstItem ? '' : ',';
+                    result += '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '}}]';
+                } else {
+                    result = ']';
+                }
                 break;
             default:
                 throw new Error('Unknown type in schema: ' + context.schema.type);
