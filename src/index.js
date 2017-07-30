@@ -105,7 +105,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hastText: false});
+                contextStack.push({root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: []});
                 break;
             }
             default:
