@@ -125,10 +125,6 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
             case 'integer':
             case 'number':
             case 'boolean':
-                if (strict) {
-                    throw new Error('Did not expect attribute "' + name + '" for schema type ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
-                }
-                break;
             case 'object':
             case 'array':
                 if (context.schema.attributes) {
@@ -154,12 +150,20 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
         }
         switch (context.schema.type) {
             case 'string':
-                result = JSON.stringify(text);
+                if (context.attributes.length >= 1) {
+                    result = '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '},"$value":' + JSON.stringify(text) + '}';
+                } else {
+                    result = JSON.stringify(text);
+                }
                 break;
             case 'integer':
             case 'number':
             case 'boolean':
-                result = text.toLowerCase();
+                if (context.attributes.length >= 1) {
+                    result = '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '},"$value":' + text.toLowerCase() + '}';
+                } else {
+                    result = text.toLowerCase();
+                }
                 break;
             case 'object':
             case 'array':
