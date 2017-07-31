@@ -30,38 +30,34 @@ function normalizeArrayItems(items) {
     }
 }
 
-function getTextNode(context, value, strict) {
-    if (Object.keys(context.attributes).length >= 1) {
-        let result = '{"$attributes":{';
-        let first = true;
-        for (const key of Object.keys(context.attributes)) {
-            if (!strict || context.schema.attributes[key]) {
-                if (!first) {
-                    result += ',';
-                }
-                first = false;
-                const attributeType = context.schema.attributes[key] || (strict ? null : 'string');
-                switch (attributeType) {
-                    case 'string':
-                        result += `"${key}":${JSON.stringify(context.attributes[key])}`;
-                        break;
-                    case 'integer':
-                    case 'number':
-                    case 'boolean':
-                        result += `"${key}":${context.attributes[key].toLowerCase()}`;
-                        break;
-                    default:
-                        throw new Error('Invalid attribute type ' + context.schema.attributes[key] + ' in ' + JSON.stringify(context.schema));
-                }
-            } else {
-                throw new Error('Did find attribute "' + key + '" in ' + JSON.stringify(context.schema));
+function getAttributesNode(context, strict) {
+    let result = '"$attributes":{';
+    let first = true;
+    for (const key of Object.keys(context.attributes)) {
+        if (!strict || context.schema.attributes[key]) {
+            if (!first) {
+                result += ',';
             }
+            first = false;
+            const attributeType = context.schema.attributes[key] || (strict ? null : 'string');
+            switch (attributeType) {
+                case 'string':
+                    result += `"${key}":${JSON.stringify(context.attributes[key])}`;
+                    break;
+                case 'integer':
+                case 'number':
+                case 'boolean':
+                    result += `"${key}":${context.attributes[key].toLowerCase()}`;
+                    break;
+                default:
+                    throw new Error('Invalid attribute type ' + context.schema.attributes[key] + ' in ' + JSON.stringify(context.schema));
+            }
+        } else {
+            throw new Error('Did find attribute "' + key + '" in ' + JSON.stringify(context.schema));
         }
-        result += '},"$value":' + value + '}';
-        return result;
-    } else {
-        return value;
     }
+    result += '}';
+    return result;
 }
 
 export default function convert(xmlStream, schema, {strict = false, trimText = true} = {}) {
@@ -161,12 +157,24 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
 
         switch (context.schema.type) {
             case 'string':
-                result = getTextNode(context, JSON.stringify(text), strict);
+                if (Object.keys(context.attributes).length >= 1) {
+                    result = '{';
+                    result += getAttributesNode(context, strict);
+                    result += ',"$value":' + JSON.stringify(text) + '}';
+                } else {
+                    result = JSON.stringify(text);
+                }
                 break;
             case 'integer':
             case 'number':
             case 'boolean':
-                result = getTextNode(context, text.toLowerCase(), strict);
+                if (Object.keys(context.attributes).length >= 1) {
+                    result = '{';
+                    result += getAttributesNode(context, strict);
+                    result += ',"$value":' + text.toLowerCase() + '}';
+                } else {
+                    result = JSON.stringify(text);
+                }
                 break;
             case 'object':
             case 'array':
@@ -191,7 +199,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
         }
     });
 
-    saxStream.on('closetag', (name) => {
+    saxStream.on('closetag', () => {
         const context = contextStack.pop();
         let result;
         switch (context.schema.type) {
@@ -206,17 +214,17 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 }
                 break;
             case 'object':
-                if (context.attributes.length >= 1) {
+                if (Object.keys(context.attributes).length >= 1) {
                     result = context.firstItem ? '' : ',';
-                    result += '"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '}}'
+                    result += getAttributesNode(context, strict) + '}';
                 } else {
                     result = '}';
                 }
                 break;
             case 'array':
-                if (context.attributes.length >= 1) {
+                if (Object.keys(context.attributes).length >= 1) {
                     result = context.firstItem ? '' : ',';
-                    result += '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '}}]';
+                    result += '{' + getAttributesNode(context, strict) + '}]';
                 } else {
                     result = ']';
                 }
