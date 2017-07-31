@@ -78,7 +78,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: []});
+                contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: node.attributes});
                 break;
             }
             case 'array':
@@ -105,7 +105,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: []});
+                contextStack.push({root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: node.attributes});
                 break;
             }
             default:
@@ -115,30 +115,6 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
             if (!jsonStream.push(result)) {
                 xmlStream.pause();
             }
-        }
-    });
-
-    saxStream.on('attribute', ({name, value}) => {
-        const context = contextStack[contextStack.length - 1];
-        switch (context.schema.type) {
-            case 'string':
-            case 'integer':
-            case 'number':
-            case 'boolean':
-            case 'object':
-            case 'array':
-                if (context.schema.attributes) {
-                    if (context.schema.attributes[name]) {
-                        context.attributes.push({name, value});
-                    } else if (strict) {
-                        throw new Error('Element has attribute "' + name + '" but schema is missing this attribute in ' + JSON.stringify(context.schema));
-                    }
-                } else if (strict) {
-                    throw new Error('Element has attribute "' + name + '" but schema has no attributes in ' + JSON.stringify(context.schema));
-                }
-                break;
-            default:
-                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
     });
 
