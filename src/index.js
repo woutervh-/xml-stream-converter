@@ -126,8 +126,8 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
         }
         switch (context.schema.type) {
             case 'string':
-                if (context.attributes.length >= 1) {
-                    result = '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '},"$value":' + JSON.stringify(text) + '}';
+                if (Object.keys(context.attributes).length >= 1) {
+                    result = '{"$attributes":{' + Object.keyts(context.attributes).map((name) => `"${name}":"${context.attributes[name]}"`).join(',') + '},"$value":' + JSON.stringify(text) + '}';
                 } else {
                     result = JSON.stringify(text);
                 }
@@ -135,8 +135,8 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
             case 'integer':
             case 'number':
             case 'boolean':
-                if (context.attributes.length >= 1) {
-                    result = '{"$attributes":{' + context.attributes.map(({name, value}) => `"${name}":"${value}"`).join(',') + '},"$value":' + text.toLowerCase() + '}';
+                if (Object.keys(context.attributes).length >= 1) {
+                    result = '{"$attributes":{' + Object.keys(context.attributes).map((name) => `"${name}":"${context.attributes[name]}"`).join(',') + '},"$value":' + text.toLowerCase() + '}';
                 } else {
                     result = text.toLowerCase();
                 }
