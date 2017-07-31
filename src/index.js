@@ -30,7 +30,7 @@ function normalizeArrayItems(items) {
     }
 }
 
-function getTextNode(context, value) {
+function getTextNode(context, value, strict) {
     if (Object.keys(context.attributes).length >= 1) {
         let result = '{"$attributes":{';
         let first = true;
@@ -58,6 +58,7 @@ function getTextNode(context, value) {
             }
         }
         result += '},"$value":' + value + '}';
+        return result;
     } else {
         return value;
     }
@@ -160,12 +161,12 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
 
         switch (context.schema.type) {
             case 'string':
-                result = getTextNode(context, JSON.stringify(text));
+                result = getTextNode(context, JSON.stringify(text), strict);
                 break;
             case 'integer':
             case 'number':
             case 'boolean':
-                result = getTextNode(context, text.toLowerCase());
+                result = getTextNode(context, text.toLowerCase(), strict);
                 break;
             case 'object':
             case 'array':
