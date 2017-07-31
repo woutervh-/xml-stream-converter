@@ -34,12 +34,12 @@ function getAttributesNode(context, strict) {
     let result = '"$attributes":{';
     let first = true;
     for (const key of Object.keys(context.attributes)) {
-        if (!strict || context.schema.attributes[key]) {
+        if (!strict || (context.schema.attributes && context.schema.attributes[key])) {
             if (!first) {
                 result += ',';
             }
             first = false;
-            const attributeType = context.schema.attributes[key] || (strict ? null : 'string');
+            const attributeType = (context.schema.attributes && context.schema.attributes[key]) || (strict ? null : 'string');
             switch (attributeType) {
                 case 'string':
                     result += `"${key}":${JSON.stringify(context.attributes[key])}`;
@@ -50,7 +50,7 @@ function getAttributesNode(context, strict) {
                     result += `"${key}":${context.attributes[key].toLowerCase()}`;
                     break;
                 default:
-                    throw new Error('Invalid attribute type ' + context.schema.attributes[key] + ' in ' + JSON.stringify(context.schema));
+                    throw new Error('Invalid attribute type ' + attributeType + ' in ' + JSON.stringify(context.schema));
             }
         } else {
             throw new Error('Did find attribute "' + key + '" in ' + JSON.stringify(context.schema));
