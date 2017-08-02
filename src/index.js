@@ -173,7 +173,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                     result += getAttributesNode(context, strict);
                     result += ',"$value":' + text.toLowerCase() + '}';
                 } else {
-                    result = JSON.stringify(text);
+                    result = text.toLowerCase();
                 }
                 break;
             case 'object':
