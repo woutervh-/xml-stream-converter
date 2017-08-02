@@ -53,7 +53,7 @@ function getAttributesNode(context, strict) {
                     throw new Error('Invalid attribute type ' + attributeType + ' in ' + JSON.stringify(context.schema));
             }
         } else {
-            throw new Error('Did find attribute "' + key + '" in ' + JSON.stringify(context.schema));
+            throw new Error('Did not find attribute "' + key + '" in ' + JSON.stringify(context.schema));
         }
     }
     result += '}';
