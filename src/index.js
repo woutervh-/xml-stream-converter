@@ -190,6 +190,9 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
         if (result.length >= 1) {
+            if (context.hasText) {
+                throw new Error('Multiple text chunks/CData chunks not supported');
+            }
             context.hasText = true;
             if (!jsonStream.push(result)) {
                 xmlStream.pause();
