@@ -214,7 +214,13 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 if (context.hasText) {
                     result = '';
                 } else {
-                    result = 'null';
+                    if (Object.keys(context.attributes).length >= 1) {
+                        result = '{';
+                        result += getAttributesNode(context, strict);
+                        result += '}';
+                    } else {
+                        result = 'null';
+                    }
                 }
                 break;
             case 'object':
