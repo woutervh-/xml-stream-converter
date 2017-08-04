@@ -42,12 +42,20 @@ function getAttributesNode(context, strict) {
             const attributeType = (context.schema.attributes && context.schema.attributes[key]) || (strict ? null : 'string');
             switch (attributeType) {
                 case 'string':
-                    result += `"${key}":${JSON.stringify(context.attributes[key])}`;
-                    break;
                 case 'integer':
                 case 'number':
                 case 'boolean':
-                    result += `"${key}":${context.attributes[key].toLowerCase()}`;
+                    let value;
+                    if (attributeType === 'string') {
+                        value = JSON.stringify(context.attributes[key]);
+                    } else if (attributeType === 'integer') {
+                        value = parseInt(context.attributes[key]);
+                    } else if (attributeType === 'number') {
+                        value = parseFloat(context.attributes[key]);
+                    } else {
+                        value = context.attributes[key].toLowerCase();
+                    }
+                    result += `"${key}":${value}`;
                     break;
                 default:
                     throw new Error('Invalid attribute type ' + attributeType + ' in ' + JSON.stringify(context.schema));
@@ -155,23 +163,25 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
 
         switch (context.schema.type) {
             case 'string':
-                if (Object.keys(context.attributes).length >= 1) {
-                    result = '{';
-                    result += getAttributesNode(context, strict);
-                    result += ',"$value":' + JSON.stringify(text) + '}';
-                } else {
-                    result = JSON.stringify(text);
-                }
-                break;
             case 'integer':
             case 'number':
             case 'boolean':
+                let value;
+                if (context.schema.type === 'string') {
+                    value = JSON.stringify(text);
+                } else if (context.schema.type === 'integer') {
+                    value = parseInt(text);
+                } else if (context.schema.type === 'number') {
+                    value = parseFloat(text);
+                } else {
+                    value = text.toLowerCase();
+                }
                 if (Object.keys(context.attributes).length >= 1) {
                     result = '{';
                     result += getAttributesNode(context, strict);
-                    result += ',"$value":' + text.toLowerCase() + '}';
+                    result += ',"$value":' + value + '}';
                 } else {
-                    result = text.toLowerCase();
+                    result = value;
                 }
                 break;
             case 'object':
