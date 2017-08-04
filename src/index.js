@@ -49,9 +49,9 @@ function getAttributesNode(context, strict) {
                     if (attributeType === 'string') {
                         value = JSON.stringify(context.attributes[key]);
                     } else if (attributeType === 'integer') {
-                        value = parseInt(context.attributes[key]);
+                        value = parseInt(context.attributes[key]).toString();
                     } else if (attributeType === 'number') {
-                        value = parseFloat(context.attributes[key]);
+                        value = parseFloat(context.attributes[key]).toString();
                     } else {
                         value = context.attributes[key].toLowerCase();
                     }
@@ -170,9 +170,9 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 if (context.schema.type === 'string') {
                     value = JSON.stringify(text);
                 } else if (context.schema.type === 'integer') {
-                    value = parseInt(text);
+                    value = parseInt(text).toString();
                 } else if (context.schema.type === 'number') {
-                    value = parseFloat(text);
+                    value = parseFloat(text).toString();
                 } else {
                     value = text.toLowerCase();
                 }
