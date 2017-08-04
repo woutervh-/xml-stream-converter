@@ -132,7 +132,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 if (!context.firstItem) {
                     result += ',';
                 }
-                if (items.length >= 2) {
+                if (items.length >= 2 || Object.keys(context.attributes).length >= 1) {
                     result += '{' + JSON.stringify(name) + ':';
                 }
                 if (schemaNode.type === 'object') {
