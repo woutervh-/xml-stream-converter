@@ -253,7 +253,7 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
                 throw new Error('Unknown type in schema: ' + context.schema.type);
         }
         const parent = contextStack[contextStack.length - 1];
-        if (parent.schema.type === 'array' && normalizeArrayItems(parent.schema.items).length >= 2) {
+        if (parent.schema.type === 'array' && (normalizeArrayItems(parent.schema.items).length >= 2 || Object.keys(parent.attributes).length >= 1)) {
             result += '}';
         }
         if (parent.root) {
