@@ -201,11 +201,14 @@ export default function convert(xmlStream, schema, {strict = false, trimText = t
         }
         if (result.length >= 1) {
             if (context.hasText) {
-                throw new Error('Multiple text chunks/CData chunks not supported');
-            }
-            context.hasText = true;
-            if (!jsonStream.push(result)) {
-                xmlStream.pause();
+                if (strict) {
+                    throw new Error('Multiple text chunks/CData chunks not supported');
+                }
+            } else {
+                context.hasText = true;
+                if (!jsonStream.push(result)) {
+                    xmlStream.pause();
+                }
             }
         }
     };
