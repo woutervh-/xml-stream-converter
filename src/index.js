@@ -68,7 +68,7 @@ function getAttributesNodeJSON(context, strict) {
     return result;
 }
 
-export function toObject(xmlStream, schema, objectPath, {strict = false, trimText = true}) {
+export function toObject(xmlStream, schema, objectPath, {strict = false, trimText = true} = {}) {
     const saxStream = sax.createStream(true, {xmlns: false});
     const objectStream = new stream.Readable({objectMode: true});
 
