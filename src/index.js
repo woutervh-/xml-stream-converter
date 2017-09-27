@@ -203,7 +203,7 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
                     parent.value = {'$value': parent.value};
                 }
             }
-            parent[context.name] = result;
+            parent.value[context.name] = result;
         }
         if (depth === pathDepth) {
             if (pathDepth === objectPath.length) {
