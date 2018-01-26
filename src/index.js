@@ -68,9 +68,36 @@ function getAttributesNodeJSON(context, strict) {
     return result;
 }
 
-export function toObject(xmlStream, schema, objectPath, {strict = false, trimText = true} = {}) {
-    const saxStream = sax.createStream(true, {xmlns: false});
-    const objectStream = new stream.Readable({objectMode: true});
+function getAttributesNodeObject(schema, attributes) {
+    if (schema.attributes) {
+        const result = {};
+        for (const key of Object.keys(attributes)) {
+            const attributeType = schema.attributes[key] || 'string';
+            switch (attributeType) {
+                case 'integer':
+                    result[key] = parseInt(attributes[key]);
+                    break;
+                case 'number':
+                    result[key] = parseFloat(attributes[key]);
+                    break;
+                case 'boolean':
+                    result[key] = attributes[key].toLowerCase() === 'true';
+                    break;
+                case 'string':
+                default:
+                    result[key] = attributes[key];
+                    break;
+            }
+        }
+        return result;
+    } else {
+        return attributes;
+    }
+}
+
+export function toObject(xmlStream, schema, objectPath, { strict = false, trimText = true } = {}) {
+    const saxStream = sax.createStream(true, { xmlns: false });
+    const objectStream = new stream.Readable({ objectMode: true });
 
     let depth = 0;
     let pathDepth = 0;
@@ -103,23 +130,23 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
                 break;
             case 'object': {
                 const name = qnameLocal(node.name);
-                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : {type: 'array'});
+                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : { type: 'array' });
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against object type in schema.');
                 }
-                contextStack.push({name, value: undefined, schema: schemaNode, attributes: node.attributes});
+                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: getAttributesNodeObject(schemaNode, node.attributes) });
                 break;
             }
             case 'array': {
                 const name = qnameLocal(node.name);
                 const items = normalizeArrayItems(context.schema.items);
-                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : {type: 'array'});
+                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : { type: 'array' });
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against array items in schema.');
                 }
-                contextStack.push({name, value: undefined, schema: schemaNode, attributes: node.attributes});
+                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: getAttributesNodeObject(schemaNode, node.attributes) });
                 break;
             }
             default:
@@ -184,7 +211,7 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
             result = null;
         }
         if (Object.keys(context.attributes).length >= 1) {
-            result = {'$value': result, '$attributes': context.attributes};
+            result = { '$value': result, '$attributes': context.attributes };
         }
         if (parent.schema.type === 'array') {
             if (!Array.isArray(parent.value)) {
@@ -195,7 +222,7 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
                 }
             }
             if (normalizeArrayItems(parent.schema.items).length >= 2 || Object.keys(parent.attributes).length >= 1) {
-                parent.value.push({[context.name]: result});
+                parent.value.push({ [context.name]: result });
             } else {
                 parent.value.push(result);
             }
@@ -204,7 +231,7 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
                 if (parent.value === undefined) {
                     parent.value = {};
                 } else {
-                    parent.value = {'$value': parent.value};
+                    parent.value = { '$value': parent.value };
                 }
             }
             parent.value[context.name] = result;
@@ -243,8 +270,8 @@ export function toObject(xmlStream, schema, objectPath, {strict = false, trimTex
     return objectStream;
 }
 
-export function toJSON(xmlStream, schema, {strict = false, trimText = true} = {}) {
-    const saxStream = sax.createStream(true, {xmlns: false});
+export function toJSON(xmlStream, schema, { strict = false, trimText = true } = {}) {
+    const saxStream = sax.createStream(true, { xmlns: false });
     const jsonStream = new stream.Readable();
 
     const rootSchema = schema;
@@ -272,7 +299,7 @@ export function toJSON(xmlStream, schema, {strict = false, trimText = true} = {}
                 break;
             case 'object': {
                 const name = qnameLocal(node.name);
-                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : {type: 'array'});
+                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '{';
                 }
@@ -290,13 +317,13 @@ export function toJSON(xmlStream, schema, {strict = false, trimText = true} = {}
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: node.attributes});
+                contextStack.push({ root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: node.attributes });
                 break;
             }
             case 'array': {
                 const name = qnameLocal(node.name);
                 const items = normalizeArrayItems(context.schema.items);
-                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : {type: 'array'});
+                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '[';
                 }
@@ -316,7 +343,7 @@ export function toJSON(xmlStream, schema, {strict = false, trimText = true} = {}
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: node.attributes});
+                contextStack.push({ root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: node.attributes });
                 break;
             }
             default:
