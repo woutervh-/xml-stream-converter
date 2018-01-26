@@ -68,30 +68,30 @@ function getAttributesNodeJSON(context, strict) {
     return result;
 }
 
-function getAttributesNodeObject(schema, attributes) {
-    if (schema.attributes) {
+function getAttributesNodeObject(context) {
+    if (context.schema.attributes) {
         const result = {};
-        for (const key of Object.keys(attributes)) {
-            const attributeType = schema.attributes[key] || 'string';
+        for (const key of Object.keys(context.attributes)) {
+            const attributeType = context.schema.attributes[key] || 'string';
             switch (attributeType) {
                 case 'integer':
-                    result[key] = parseInt(attributes[key]);
+                    result[key] = parseInt(context.attributes[key]);
                     break;
                 case 'number':
-                    result[key] = parseFloat(attributes[key]);
+                    result[key] = parseFloat(context.attributes[key]);
                     break;
                 case 'boolean':
-                    result[key] = attributes[key].toLowerCase() === 'true';
+                    result[key] = context.attributes[key].toLowerCase() === 'true';
                     break;
                 case 'string':
                 default:
-                    result[key] = attributes[key];
+                    result[key] = context.attributes[key];
                     break;
             }
         }
         return result;
     } else {
-        return attributes;
+        return context.attributes;
     }
 }
 
@@ -135,7 +135,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against object type in schema.');
                 }
-                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: getAttributesNodeObject(schemaNode, node.attributes) });
+                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: node.attributes });
                 break;
             }
             case 'array': {
@@ -146,7 +146,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against array items in schema.');
                 }
-                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: getAttributesNodeObject(schemaNode, node.attributes) });
+                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: node.attributes });
                 break;
             }
             default:
@@ -211,7 +211,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
             result = null;
         }
         if (Object.keys(context.attributes).length >= 1) {
-            result = { '$value': result, '$attributes': context.attributes };
+            result = { '$value': result, '$attributes': getAttributesNodeObject(context) };
         }
         if (parent.schema.type === 'array') {
             if (!Array.isArray(parent.value)) {
