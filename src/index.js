@@ -173,7 +173,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                 } else if (context.schema.type === 'number') {
                     result = parseFloat(text);
                 } else {
-                    result = text.toLowerCase();
+                    result = text.toLowerCase() === 'true';
                 }
                 break;
             case 'object':
