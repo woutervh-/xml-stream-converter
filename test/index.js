@@ -66,7 +66,7 @@ const schema = {
     }
 };
 
-toObject(fs.createReadStream(__dirname + '/test-ns.xml'), schema, ['ns2:Document', 'ns2:item'])
+toObject(fs.createReadStream(__dirname + '/test-ns.xml'), schema, ['Document', 'item'], { ignoreTagNameSpace: true })
     .on('data', (data) => {
         console.log(data);
     });
