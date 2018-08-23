@@ -95,7 +95,7 @@ function getAttributesNodeObject(context) {
     }
 }
 
-export function toObject(xmlStream, schema, objectPath, { strict = false, trimText = true } = {}) {
+export function toObject(xmlStream, schema, objectPath, { strict = false, trimText = true, ignoreTagNameSpace = false } = {}) {
     const saxStream = sax.createStream(true, { xmlns: false });
     const objectStream = new stream.Readable({ objectMode: true });
 
@@ -111,8 +111,12 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
     }];
 
     saxStream.on('opentag', (node) => {
-        if (depth === pathDepth && objectPath[depth] === node.name) {
-            pathDepth += 1;
+        if (depth === pathDepth) {
+            if (ignoreTagNameSpace && objectPath[depth] === qnameLocal(node.name)) {
+                pathDepth += 1;
+            } else if (objectPath[depth] === node.name) {
+                pathDepth += 1;
+            }
         }
         depth += 1;
 
