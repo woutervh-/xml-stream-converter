@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:Document xmlns="http://www.example.org/xmlns" 
+    xmlns:ns2="http://www.example.org/ns2" 
+    xmlns:ns3="http://www.example.org/ns3" 
+    xmlns:ns4="http://www.example.org/ns4" 
+    xmlns:ns5="http://www.example.org/ns5" 
+    xmlns:ns6="http://www.example.org/ns6" 
+    xmlns:ns7="http://www.example.org/ns7" 
+    xmlns:ns8="http://www.example.org/ns8" 
+    xmlns:ns9="http://www.example.org/ns9" 
+    xmlns:ns10="http://www.example.org/ns10" 
+    xmlns:ns11="http://www.example.org/ns11" 
+    xmlns:ns12="http://www.example.org/ns12">
+    <ns2:metaData>
+        <ns2:foo>1</ns2:foo>
+        <ns2:bar>ABCDEFX</ns2:bar>
+        <ns2:created>2018-08-23T08:00:00Z</ns2:created>
+    </ns2:metaData>
+    <ns2:item>
+        <message>
+            <key>ASDFGHJKL</key>
+            <version>1</version>
+            <contentType>FOO</contentType>
+        </message>
+        <ns3:location>
+            <ns4:position>Anywhere</ns4:position>
+        </ns3:location>
+        <ns2:event>
+            <ns8:importantEvent>
+                Very important
+            </ns8:importantEvent>
+            <ns9:secondaryEvent>
+                Not so important
+            </ns9:secondaryEvent>
+        </ns2:event>
+    </ns2:item>
+    <ns2:item>
+        <message>
+            <key>MNBVCXZ</key>
+            <version>1</version>
+            <contentType>FOO</contentType>
+        </message>
+        <ns3:location>
+            <ns4:position>Somewhere</ns4:position>
+        </ns3:location>
+        <ns2:event>
+            <ns8:importantEvent>
+                Super important
+            </ns8:importantEvent>
+            <ns9:secondaryEvent>
+                Doesn't matter
+            </ns9:secondaryEvent>
+        </ns2:event>
+    </ns2:item>
+</ns2:Document>

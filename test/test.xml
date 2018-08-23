@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns="http://www.example.org/xmlns">
+    <metaData>
+        <foo>1</foo>
+        <bar>ABCDEFX</bar>
+        <created>2018-08-23T08:00:00Z</created>
+    </metaData>
+    <item>
+        <message>
+            <key>ASDFGHJKL</key>
+            <version>1</version>
+            <contentType>FOO</contentType>
+        </message>
+        <location>
+            <position>Anywhere</position>
+        </location>
+        <event>
+            <importantEvent>
+                Very important
+            </importantEvent>
+            <secondaryEvent>
+                Not so important
+            </secondaryEvent>
+        </event>
+    </item>
+    <item>
+        <message>
+            <key>MNBVCXZ</key>
+            <version>1</version>
+            <contentType>FOO</contentType>
+        </message>
+        <location>
+            <position>Somewhere</position>
+        </location>
+        <event>
+            <importantEvent>
+                Super important
+            </importantEvent>
+            <secondaryEvent>
+                Doesn't matter
+            </secondaryEvent>
+        </event>
+    </item>
+</Document>
