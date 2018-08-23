@@ -111,7 +111,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
     }];
 
     saxStream.on('opentag', (node) => {
-        if (depth === pathDepth && objectPath[depth] === node.name) {
+        if (depth === pathDepth && objectPath[depth] === qnameLocal(node.name)) {
             pathDepth += 1;
         }
         depth += 1;
