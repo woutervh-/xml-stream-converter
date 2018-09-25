@@ -58,6 +58,9 @@ const schema = {
                                     type: 'string'
                                 }
                             }
+                        },
+                        type: {
+                            type: 'array'
                         }
                     }
                 }
@@ -66,7 +69,7 @@ const schema = {
     }
 };
 
-toObject(fs.createReadStream(__dirname + '/test-ns.xml'), schema, ['Document', 'item'], { ignoreTagNameSpace: true })
+toObject(fs.createReadStream(__dirname + '/test.xml'), schema, ['Document', 'item'], { ignoreTagNameSpace: true })
     .on('data', (data) => {
         console.log(data);
     });
