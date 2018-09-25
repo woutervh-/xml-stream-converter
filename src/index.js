@@ -238,7 +238,14 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                     parent.value = { '$value': parent.value };
                 }
             }
-            parent.value[context.name] = result;
+            if (context.schema.type === 'array') {
+                if (parent.value[context.name] === undefined) {
+                    parent.value[context.name] = [];
+                }
+                parent.value[context.name].push(result);
+            } else {
+                parent.value[context.name] = result;
+            }
         }
         if (depth === pathDepth) {
             if (pathDepth === objectPath.length) {

@@ -22,6 +22,8 @@
                 Not so important
             </secondaryEvent>
         </event>
+        <type>Type 1</type>
+        <type>Type 2</type>
     </item>
     <item>
         <message>
@@ -40,5 +42,7 @@
                 Doesn't matter
             </secondaryEvent>
         </event>
+        <type>Type 3</type>
+        <type>Type 4</type>
     </item>
 </Document>

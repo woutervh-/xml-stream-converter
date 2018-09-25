@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:Document xmlns="http://www.example.org/xmlns" 
-    xmlns:ns2="http://www.example.org/ns2" 
-    xmlns:ns3="http://www.example.org/ns3" 
-    xmlns:ns4="http://www.example.org/ns4" 
-    xmlns:ns5="http://www.example.org/ns5" 
-    xmlns:ns6="http://www.example.org/ns6" 
-    xmlns:ns7="http://www.example.org/ns7" 
-    xmlns:ns8="http://www.example.org/ns8" 
-    xmlns:ns9="http://www.example.org/ns9" 
-    xmlns:ns10="http://www.example.org/ns10" 
-    xmlns:ns11="http://www.example.org/ns11" 
+<ns2:Document xmlns="http://www.example.org/xmlns"
+    xmlns:ns2="http://www.example.org/ns2"
+    xmlns:ns3="http://www.example.org/ns3"
+    xmlns:ns4="http://www.example.org/ns4"
+    xmlns:ns5="http://www.example.org/ns5"
+    xmlns:ns6="http://www.example.org/ns6"
+    xmlns:ns7="http://www.example.org/ns7"
+    xmlns:ns8="http://www.example.org/ns8"
+    xmlns:ns9="http://www.example.org/ns9"
+    xmlns:ns10="http://www.example.org/ns10"
+    xmlns:ns11="http://www.example.org/ns11"
     xmlns:ns12="http://www.example.org/ns12">
     <ns2:metaData>
         <ns2:foo>1</ns2:foo>
@@ -33,6 +33,8 @@
                 Not so important
             </ns9:secondaryEvent>
         </ns2:event>
+        <ns2:type>Type 1</ns2:type>
+        <ns2:type>Type 2</ns2:type>
     </ns2:item>
     <ns2:item>
         <message>
@@ -51,5 +53,7 @@
                 Doesn't matter
             </ns9:secondaryEvent>
         </ns2:event>
+        <ns2:type>Type 2</ns2:type>
+        <ns2:type>Type 3</ns2:type>
     </ns2:item>
 </ns2:Document>
