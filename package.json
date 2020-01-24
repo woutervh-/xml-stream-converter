@@ -3,8 +3,9 @@
   "version": "0.2.7",
   "description": "",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "build": "rimraf lib && babel src -d lib",
+    "build": "rimraf lib && babel src -d lib --copy-files",
     "start": "node lib/index.js",
     "start:dev": "babel-node src/index.js",
     "test": "node test/index.js"
