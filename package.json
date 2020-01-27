@@ -3,10 +3,12 @@
   "version": "0.2.7",
   "description": "",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "build": "rimraf lib && babel src -d lib",
+    "build": "rimraf lib && npm run lint && tsc && copy-cli \"src/**/*.d.ts\" \"lib/\"",
+    "lint": "eslint \"src/**/*.ts\" \"src/**/*.d.ts\"",
     "start": "node lib/index.js",
-    "start:dev": "babel-node src/index.js",
+    "start:dev": "ts-node src/index.ts",
     "test": "node test/index.js"
   },
   "repository": {
@@ -20,9 +22,22 @@
   },
   "homepage": "https://github.com/woutervh-/xml-stream-converter#readme",
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-preset-env": "^1.6.0",
-    "rimraf": "^2.6.1"
+    "@types/jsonpointer": "^4.0.0",
+    "@types/sax": "^1.2.1",
+    "@typescript-eslint/eslint-plugin": "^2.9.0",
+    "@typescript-eslint/parser": "^2.9.0",
+    "eslint": "^6.7.1",
+    "copy": "^0.3.2",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-prefer-arrow": "^1.1.6",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.16.0",
+    "eslint-plugin-standard": "^4.0.1",
+    "rimraf": "^3.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5"
   },
   "dependencies": {
     "jsonpointer": "^4.0.1",
