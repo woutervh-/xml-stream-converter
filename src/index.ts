@@ -5,7 +5,7 @@ import SchemaNode from './model/schema-node';
 import Context from './model/context';
 import { Dictionary, JSONValue } from './model/common';
 
-function qnameLocal(tag: string) {
+function qnameLocal(tag: string): string {
     const parts = tag.split(':');
     return parts.length >= 2 ? parts[1] : parts[0];
 }
@@ -96,7 +96,7 @@ function getAttributesNodeObject(context: Context): Dictionary<JSONValue> {
     }
 }
 
-export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectPath: string[], { strict = false, trimText = true, ignoreTagNameSpace = false } = {}) {
+export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectPath: string[], { strict = false, trimText = true, ignoreTagNameSpace = false } = {}): stream.Readable {
     const saxStream = sax.createStream(true, { xmlns: false });
     const objectStream = new stream.Readable({ objectMode: true });
 
@@ -286,7 +286,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
     return objectStream;
 }
 
-export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict = false, trimText = true } = {}) {
+export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict = false, trimText = true } = {}): stream.Readable {
     const saxStream = sax.createStream(true, { xmlns: false });
     const jsonStream = new stream.Readable();
 
