@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "target": "es2017",
+        "module": "commonjs",
+        "lib": [
+            "es5",
+            "es2015",
+            "es2016",
+            "es2017"
+        ],
+        "strict": true,
+        "sourceMap": true,
+        "declaration": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "keyofStringsOnly": true,
+        "outDir": "lib",
+        "noUnusedLocals": true,
+        "typeRoots": [
+            "@types",
+            "node_modules/@types"
+        ],
+        "plugins": []
+    },
+    "include": [
+        "src"
+    ]
+}

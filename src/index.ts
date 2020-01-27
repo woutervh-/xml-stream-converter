@@ -1,13 +1,16 @@
-import sax from 'sax';
-import stream from 'stream';
-import jsonpointer from 'jsonpointer';
+import * as sax from 'sax';
+import * as stream from 'stream';
+import * as jsonpointer from 'jsonpointer';
+import SchemaNode from './model/schema-node';
+import Context from './model/context';
+import { Dictionary, JSONValue } from './model/common';
 
-function qnameLocal(tag) {
+function qnameLocal(tag: string) {
     const parts = tag.split(':');
     return parts.length >= 2 ? parts[1] : parts[0];
 }
 
-function resolveSchemaNode(rootSchema, node) {
+function resolveSchemaNode(rootSchema: SchemaNode, node?: SchemaNode): SchemaNode | undefined {
     while (node && node['$ref']) {
         if (node['$ref'][0] === '#') {
             node = jsonpointer.get(rootSchema, node['$ref'].substr(1));
@@ -18,7 +21,7 @@ function resolveSchemaNode(rootSchema, node) {
     return node;
 }
 
-function normalizeArrayItems(items) {
+function normalizeArrayItems<T>(items: T | T[]): T[] {
     if (Array.isArray(items)) {
         return items;
     } else {
@@ -30,7 +33,7 @@ function normalizeArrayItems(items) {
     }
 }
 
-function getAttributesNodeJSON(context, strict) {
+function getAttributesNodeJSON(context: Context, strict: boolean): string {
     let result = '"$attributes":{';
     let first = true;
     for (const key of Object.keys(context.attributes)) {
@@ -40,26 +43,24 @@ function getAttributesNodeJSON(context, strict) {
             }
             first = false;
             const attributeType = (context.schema.attributes && context.schema.attributes[key]) || (strict ? null : 'string');
+            let value;
             switch (attributeType) {
                 case 'string':
+                    value = JSON.stringify(context.attributes[key]);
+                    break;
                 case 'integer':
+                    value = parseInt(context.attributes[key]).toString();
+                    break;
                 case 'number':
+                    value = parseFloat(context.attributes[key]).toString();
+                    break;
                 case 'boolean':
-                    let value;
-                    if (attributeType === 'string') {
-                        value = JSON.stringify(context.attributes[key]);
-                    } else if (attributeType === 'integer') {
-                        value = parseInt(context.attributes[key]).toString();
-                    } else if (attributeType === 'number') {
-                        value = parseFloat(context.attributes[key]).toString();
-                    } else {
-                        value = context.attributes[key].toLowerCase();
-                    }
-                    result += `"${key}":${value}`;
+                    value = context.attributes[key].toLowerCase();
                     break;
                 default:
                     throw new Error('Invalid attribute type ' + attributeType + ' in ' + JSON.stringify(context.schema));
             }
+            result += `"${key}":${value}`;
         } else {
             throw new Error('Did not find attribute "' + key + '" in ' + JSON.stringify(context.schema));
         }
@@ -68,9 +69,9 @@ function getAttributesNodeJSON(context, strict) {
     return result;
 }
 
-function getAttributesNodeObject(context) {
+function getAttributesNodeObject(context: Context): Dictionary<JSONValue> {
     if (context.schema.attributes) {
-        const result = {};
+        const result: Dictionary<JSONValue> = {};
         for (const key of Object.keys(context.attributes)) {
             const attributeType = context.schema.attributes[key] || 'string';
             switch (attributeType) {
@@ -95,7 +96,7 @@ function getAttributesNodeObject(context) {
     }
 }
 
-export function toObject(xmlStream, schema, objectPath, { strict = false, trimText = true, ignoreTagNameSpace = false } = {}) {
+export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectPath: string[], { strict = false, trimText = true, ignoreTagNameSpace = false } = {}) {
     const saxStream = sax.createStream(true, { xmlns: false });
     const objectStream = new stream.Readable({ objectMode: true });
 
@@ -103,14 +104,14 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
     let pathDepth = 0;
 
     const rootSchema = schema;
-    const contextStack = [{
+    const contextStack: Context[] = [{
         name: 'root',
         value: undefined,
         schema: rootSchema,
         attributes: {}
     }];
 
-    saxStream.on('opentag', (node) => {
+    saxStream.on('opentag', (node: sax.Tag) => {
         if (depth === pathDepth) {
             if (ignoreTagNameSpace && objectPath[depth] === qnameLocal(node.name)) {
                 pathDepth += 1;
@@ -134,23 +135,36 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                 break;
             case 'object': {
                 const name = qnameLocal(node.name);
-                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : { type: 'array' });
+                const schemaNode: SchemaNode | null = (
+                        context.schema.properties
+                        && resolveSchemaNode(rootSchema, context.schema.properties[name])
+                    ) || (strict ? null : { type: 'array' });
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against object type in schema.');
                 }
-                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: node.attributes });
+                contextStack.push({
+                    name,
+                    value: undefined,
+                    schema: schemaNode,
+                    attributes: node.attributes
+                });
                 break;
             }
             case 'array': {
                 const name = qnameLocal(node.name);
                 const items = normalizeArrayItems(context.schema.items);
-                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : { type: 'array' });
+                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item!.title === name)!) || (strict ? null : { type: 'array' });
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against array items in schema.');
                 }
-                contextStack.push({ name, value: undefined, schema: schemaNode, attributes: node.attributes });
+                contextStack.push({
+                    name,
+                    value: undefined,
+                    schema: schemaNode,
+                    attributes: node.attributes
+                });
                 break;
             }
             default:
@@ -158,7 +172,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
         }
     });
 
-    const textHandler = (text) => {
+    const textHandler = (text: string) => {
         const context = contextStack[contextStack.length - 1];
         let result;
         if (trimText) {
@@ -167,18 +181,16 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
 
         switch (context.schema.type) {
             case 'string':
+                result = text;
+                break;
             case 'integer':
+                result = parseInt(text);
+                break;
             case 'number':
+                result = parseFloat(text);
+                break;
             case 'boolean':
-                if (context.schema.type === 'string') {
-                    result = text;
-                } else if (context.schema.type === 'integer') {
-                    result = parseInt(text);
-                } else if (context.schema.type === 'number') {
-                    result = parseFloat(text);
-                } else {
-                    result = text.toLowerCase() === 'true';
-                }
+                result = text.toLowerCase() === 'true';
                 break;
             case 'object':
             case 'array':
@@ -208,7 +220,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
     saxStream.on('text', textHandler);
 
     saxStream.on('closetag', () => {
-        const context = contextStack.pop();
+        const context = contextStack.pop()!;
         const parent = contextStack[contextStack.length - 1];
         let result = context.value;
         if (result === undefined) {
@@ -226,7 +238,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                 }
             }
             if (normalizeArrayItems(parent.schema.items).length >= 2 || Object.keys(parent.attributes).length >= 1) {
-                parent.value.push({ [context.name]: result });
+                parent.value.push({ [context.name!]: result });
             } else {
                 parent.value.push(result);
             }
@@ -238,7 +250,7 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
                     parent.value = { '$value': parent.value };
                 }
             }
-            parent.value[context.name] = result;
+            (parent.value as {[key: string]: JSONValue})[context.name!] = result;
         }
         if (depth === pathDepth) {
             if (pathDepth === objectPath.length) {
@@ -274,12 +286,12 @@ export function toObject(xmlStream, schema, objectPath, { strict = false, trimTe
     return objectStream;
 }
 
-export function toJSON(xmlStream, schema, { strict = false, trimText = true } = {}) {
+export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict = false, trimText = true } = {}) {
     const saxStream = sax.createStream(true, { xmlns: false });
     const jsonStream = new stream.Readable();
 
     const rootSchema = schema;
-    const contextStack = [{
+    const contextStack: Context[] = [{
         root: true,
         schema: rootSchema,
         firstItem: true,
@@ -287,7 +299,7 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
         attributes: {}
     }];
 
-    saxStream.on('opentag', (node) => {
+    saxStream.on('opentag', (node: sax.Tag) => {
         const context = contextStack[contextStack.length - 1];
         let result = '';
         switch (context.schema.type) {
@@ -303,7 +315,10 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
                 break;
             case 'object': {
                 const name = qnameLocal(node.name);
-                const schemaNode = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : { type: 'array' });
+                const schemaNode = (
+                        context.schema.properties
+                        && resolveSchemaNode(rootSchema, context.schema.properties[name])
+                    ) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '{';
                 }
@@ -327,7 +342,7 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
             case 'array': {
                 const name = qnameLocal(node.name);
                 const items = normalizeArrayItems(context.schema.items);
-                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : { type: 'array' });
+                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item!.title === name)) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '[';
                 }
@@ -347,7 +362,7 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
                     result += '[';
                 }
                 context.firstItem = false;
-                contextStack.push({ root: false, schema: schemaNode, firstItem: true, hastText: false, attributes: node.attributes });
+                contextStack.push({ root: false, schema: schemaNode, firstItem: true, hasText: false, attributes: node.attributes });
                 break;
             }
             default:
@@ -360,51 +375,53 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
         }
     });
 
-    const textHandler = (text) => {
-        const context = contextStack[contextStack.length - 1];
+    const textHandler = (text: string) => {
+        const context: Context = contextStack[contextStack.length - 1];
         let result;
         if (trimText) {
             text = text.trim();
         }
 
-        switch (context.schema.type) {
-            case 'string':
-            case 'integer':
-            case 'number':
-            case 'boolean':
-                let value;
-                if (context.schema.type === 'string') {
+        if (context.schema.type == 'object'
+            || context.schema.type == 'array') {
+            if (strict) {
+                if (text.length >= 1) {
+                    throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
+                } else {
+                    result = '';
+                }
+            } else {
+                result = text.length >= 1 ? JSON.stringify(text) : '';
+            }
+        } else {
+            let value;
+
+            switch(context.schema.type) {
+
+                case 'string':
                     value = JSON.stringify(text);
-                } else if (context.schema.type === 'integer') {
+                    break;
+                case 'integer':
                     value = parseInt(text).toString();
-                } else if (context.schema.type === 'number') {
+                    break;
+                case 'number':
                     value = parseFloat(text).toString();
-                } else {
+                    break;
+                case 'boolean':
                     value = text.toLowerCase();
-                }
-                if (Object.keys(context.attributes).length >= 1) {
-                    result = '{';
-                    result += getAttributesNodeJSON(context, strict);
-                    result += ',"$value":' + value + '}';
-                } else {
-                    result = value;
-                }
-                break;
-            case 'object':
-            case 'array':
-                if (strict) {
-                    if (text.length >= 1) {
-                        throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
-                    } else {
-                        result = '';
-                    }
-                } else {
-                    result = text.length >= 1 ? JSON.stringify(text) : '';
-                }
-                break;
-            default:
-                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
+                default:
+                    throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
+            }
+
+            if (Object.keys(context.attributes).length >= 1) {
+                result = '{';
+                result += getAttributesNodeJSON(context, strict);
+                result += ',"$value":' + value + '}';
+            } else {
+                result = value;
+            }
         }
+
         if (result.length >= 1) {
             if (context.hasText) {
                 if (strict) {
@@ -423,7 +440,7 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
     saxStream.on('text', textHandler);
 
     saxStream.on('closetag', () => {
-        const context = contextStack.pop();
+        const context = contextStack.pop()!;
         let result;
         switch (context.schema.type) {
             case 'string':
@@ -483,11 +500,11 @@ export function toJSON(xmlStream, schema, { strict = false, trimText = true } = 
         jsonStream.push(null);
     });
 
-    xmlStream.on('error', (error) => {
+    xmlStream.on('error', (error: Error) => {
         jsonStream.emit('error', error);
     });
 
-    saxStream.on('error', (error) => {
+    saxStream.on('error', (error: Error) => {
         jsonStream.emit('error', error);
     });
 
