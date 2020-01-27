@@ -11,7 +11,7 @@ function qnameLocal(tag: string): string {
 }
 
 function resolveSchemaNode(rootSchema: SchemaNode, node?: SchemaNode): SchemaNode | undefined {
-    while (node && node.$ref) {
+    while (node && '$ref' in node) {
         if (node.$ref[0] === '#') {
             node = jsonpointer.get(rootSchema, node.$ref.substr(1));
         } else {
@@ -37,12 +37,12 @@ function getAttributesNodeJSON(context: Context, strict: boolean): string {
     let result = '"$attributes":{';
     let first = true;
     for (const key of Object.keys(context.attributes)) {
-        if (!strict || (context.schema.attributes && context.schema.attributes[key])) {
+        if (!strict || ('attributes' in context.schema && context.schema.attributes![key])) {
             if (!first) {
                 result += ',';
             }
             first = false;
-            const attributeType = (context.schema.attributes && context.schema.attributes[key]) || (strict ? null : 'string');
+            const attributeType = ('attributes' in context.schema && context.schema.attributes![key]) || (strict ? null : 'string');
             let value;
             switch (attributeType) {
                 case 'string':
@@ -70,10 +70,10 @@ function getAttributesNodeJSON(context: Context, strict: boolean): string {
 }
 
 function getAttributesNodeObject(context: Context): Dictionary<JSONValue> {
-    if (context.schema.attributes) {
+    if ('attributes' in context.schema) {
         const result: Dictionary<JSONValue> = {};
         for (const key of Object.keys(context.attributes)) {
-            const attributeType = context.schema.attributes[key] || 'string';
+            const attributeType = context.schema.attributes![key] || 'string';
             switch (attributeType) {
                 case 'integer':
                     result[key] = parseInt(context.attributes[key], 10);
@@ -122,6 +122,9 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
         depth += 1;
 
         const context = contextStack[contextStack.length - 1];
+        if (!('type' in context.schema)) {
+            throw new Error('Missing type in schema node.');
+        }
         switch (context.schema.type) {
             case 'string':
             case 'integer':
@@ -136,10 +139,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
             case 'object': {
                 const name = qnameLocal(node.name);
 
-                const schemaNode: SchemaNode | null = (
-                    context.schema.properties
-                    && resolveSchemaNode(rootSchema, context.schema.properties[name])
-                ) || (strict ? null : { type: 'array' });
+                const schemaNode: SchemaNode | null = resolveSchemaNode(rootSchema, context.schema.properties[name]) || (strict ? null : { type: 'array' });
 
                 if (!schemaNode) {
                     console.error(contextStack);
@@ -155,8 +155,8 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
             }
             case 'array': {
                 const name = qnameLocal(node.name);
-                const items = normalizeArrayItems(context.schema.items);
-                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item!.title === name)!) || (strict ? null : { type: 'array' });
+                const items = normalizeArrayItems(context.schema.items!);
+                const schemaNode = resolveSchemaNode(rootSchema, items.find((item) => item.title === name)) || (strict ? null : { type: 'array' });
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against array items in schema.');
@@ -169,8 +169,6 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                 });
                 break;
             }
-            default:
-                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
     });
 
@@ -181,6 +179,9 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
             text = text.trim();
         }
 
+        if (!('type' in context.schema)) {
+            throw new Error('Missing type in schema node.');
+        }
         switch (context.schema.type) {
             case 'string':
                 result = text;
@@ -204,8 +205,6 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                     }
                 }
                 break;
-            default:
-                throw new Error('Unknown type (in schema): ' + context.schema.type + ' in ' + JSON.stringify(context.schema));
         }
         if (result !== undefined) {
             if (context.value !== undefined) {
@@ -231,6 +230,9 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
         if (Object.keys(context.attributes).length >= 1) {
             result = { $value: result, $attributes: getAttributesNodeObject(context) };
         }
+        if (!('type' in parent.schema)) {
+            throw new Error('Missing type in schema node.');
+        }
         if (parent.schema.type === 'array') {
             if (!Array.isArray(parent.value)) {
                 if (parent.value === undefined) {
@@ -252,7 +254,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                     parent.value = { $value: parent.value };
                 }
             }
-            (parent.value as {[key: string]: JSONValue})[context.name!] = result;
+            (parent.value as { [key: string]: JSONValue })[context.name!] = result;
         }
         if (depth === pathDepth) {
             if (pathDepth === objectPath.length) {
@@ -305,6 +307,9 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
     saxStream.on('opentag', (node: sax.Tag) => {
         const context = contextStack[contextStack.length - 1];
         let result = '';
+        if (!('type' in context.schema)) {
+            throw new Error('Missing type in schema node.');
+        }
         switch (context.schema.type) {
             case 'string':
             case 'integer':
@@ -320,7 +325,7 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
                 const name = qnameLocal(node.name);
                 const schemaNode = (
                     context.schema.properties
-                        && resolveSchemaNode(rootSchema, context.schema.properties[name])
+                    && resolveSchemaNode(rootSchema, context.schema.properties[name])
                 ) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '{';
