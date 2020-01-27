@@ -11,11 +11,11 @@ function qnameLocal(tag: string): string {
 }
 
 function resolveSchemaNode(rootSchema: SchemaNode, node?: SchemaNode): SchemaNode | undefined {
-    while (node && node['$ref']) {
-        if (node['$ref'][0] === '#') {
-            node = jsonpointer.get(rootSchema, node['$ref'].substr(1));
+    while (node && node.$ref) {
+        if (node.$ref[0] === '#') {
+            node = jsonpointer.get(rootSchema, node.$ref.substr(1));
         } else {
-            node = jsonpointer.get(rootSchema, node['$ref']);
+            node = jsonpointer.get(rootSchema, node.$ref);
         }
     }
     return node;
@@ -49,7 +49,7 @@ function getAttributesNodeJSON(context: Context, strict: boolean): string {
                     value = JSON.stringify(context.attributes[key]);
                     break;
                 case 'integer':
-                    value = parseInt(context.attributes[key]).toString();
+                    value = parseInt(context.attributes[key], 10).toString();
                     break;
                 case 'number':
                     value = parseFloat(context.attributes[key]).toString();
@@ -76,7 +76,7 @@ function getAttributesNodeObject(context: Context): Dictionary<JSONValue> {
             const attributeType = context.schema.attributes[key] || 'string';
             switch (attributeType) {
                 case 'integer':
-                    result[key] = parseInt(context.attributes[key]);
+                    result[key] = parseInt(context.attributes[key], 10);
                     break;
                 case 'number':
                     result[key] = parseFloat(context.attributes[key]);
@@ -135,10 +135,12 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                 break;
             case 'object': {
                 const name = qnameLocal(node.name);
+
                 const schemaNode: SchemaNode | null = (
-                        context.schema.properties
-                        && resolveSchemaNode(rootSchema, context.schema.properties[name])
-                    ) || (strict ? null : { type: 'array' });
+                    context.schema.properties
+                    && resolveSchemaNode(rootSchema, context.schema.properties[name])
+                ) || (strict ? null : { type: 'array' });
+
                 if (!schemaNode) {
                     console.error(contextStack);
                     throw new Error('Element <' + node.name + '> cannot be matched against object type in schema.');
@@ -184,7 +186,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                 result = text;
                 break;
             case 'integer':
-                result = parseInt(text);
+                result = parseInt(text, 10);
                 break;
             case 'number':
                 result = parseFloat(text);
@@ -227,7 +229,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
             result = null;
         }
         if (Object.keys(context.attributes).length >= 1) {
-            result = { '$value': result, '$attributes': getAttributesNodeObject(context) };
+            result = { $value: result, $attributes: getAttributesNodeObject(context) };
         }
         if (parent.schema.type === 'array') {
             if (!Array.isArray(parent.value)) {
@@ -247,7 +249,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
                 if (parent.value === undefined) {
                     parent.value = {};
                 } else {
-                    parent.value = { '$value': parent.value };
+                    parent.value = { $value: parent.value };
                 }
             }
             (parent.value as {[key: string]: JSONValue})[context.name!] = result;
@@ -277,6 +279,7 @@ export function toObject(xmlStream: stream.Readable, schema: SchemaNode, objectP
         objectStream.emit('error', error);
     });
 
+    // eslint-disable-next-line no-underscore-dangle
     objectStream._read = () => {
         xmlStream.resume();
     };
@@ -316,9 +319,9 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
             case 'object': {
                 const name = qnameLocal(node.name);
                 const schemaNode = (
-                        context.schema.properties
+                    context.schema.properties
                         && resolveSchemaNode(rootSchema, context.schema.properties[name])
-                    ) || (strict ? null : { type: 'array' });
+                ) || (strict ? null : { type: 'array' });
                 if (context.root) {
                     result += '{';
                 }
@@ -382,8 +385,8 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
             text = text.trim();
         }
 
-        if (context.schema.type == 'object'
-            || context.schema.type == 'array') {
+        if (context.schema.type === 'object'
+            || context.schema.type === 'array') {
             if (strict) {
                 if (text.length >= 1) {
                     throw new Error('Did not expect a text element to match ' + context.schema.type + ' (found "' + text + '" while parsing ' + JSON.stringify(context.schema) + ')');
@@ -396,13 +399,12 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
         } else {
             let value;
 
-            switch(context.schema.type) {
-
+            switch (context.schema.type) {
                 case 'string':
                     value = JSON.stringify(text);
                     break;
                 case 'integer':
-                    value = parseInt(text).toString();
+                    value = parseInt(text, 10).toString();
                     break;
                 case 'number':
                     value = parseFloat(text).toString();
@@ -508,6 +510,7 @@ export function toJSON(xmlStream: stream.Readable, schema: SchemaNode, { strict 
         jsonStream.emit('error', error);
     });
 
+    // eslint-disable-next-line no-underscore-dangle
     jsonStream._read = () => {
         xmlStream.resume();
     };

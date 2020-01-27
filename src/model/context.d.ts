@@ -1,7 +1,7 @@
-import SchemaNode from "./schema-node";
-import { Dictionary, JSONValue } from "./common";
+import SchemaNode from './schema-node';
+import { Dictionary, JSONValue } from './common';
 
-export default interface Context {
+interface Context {
     name?: string;
     value?: JSONValue;
     attributes: Dictionary<string>;
@@ -10,3 +10,6 @@ export default interface Context {
     hasText?: boolean;
     firstItem?: boolean;
 }
+
+// eslint-disable-next-line no-undef
+export default Context;

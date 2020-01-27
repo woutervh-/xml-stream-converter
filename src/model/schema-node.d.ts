@@ -1,6 +1,6 @@
-import { Dictionary } from "./common";
+import { Dictionary } from './common';
 
-export default interface SchemaNode {
+interface SchemaNode {
     title?: string;
     attributes?: Dictionary<unknown>;
     properties?: Dictionary<SchemaNode>;
@@ -8,3 +8,6 @@ export default interface SchemaNode {
     '$ref'?: string;
     items?: Array<SchemaNode>;
 }
+
+// eslint-disable-next-line no-undef
+export default SchemaNode;
