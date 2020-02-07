@@ -6,7 +6,7 @@ interface SchemaNode {
     properties?: Dictionary<SchemaNode>;
     type: 'string' | 'integer' | 'number' | 'boolean' | 'object' | 'array';
     '$ref'?: string;
-    items?: Array<SchemaNode>;
+    items?: Array<SchemaNode> | SchemaNode;
     format?: string;
 }
 
