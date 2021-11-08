@@ -40,7 +40,7 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "jsonpointer": "^4.0.1",
+    "jsonpointer": "^5.0.0",
     "sax": "^1.2.4"
   }
 }
